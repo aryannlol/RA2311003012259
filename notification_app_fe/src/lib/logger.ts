@@ -1,48 +1,32 @@
 /**
- * Reusable Logging Middleware for Telemetry
- * Communicates with the central evaluation server
+ * Telemetry Utility for Evaluation Service
  */
 
-type LogStack = "backend" | "frontend";
-type LogLevel = "debug" | "info" | "warn" | "error" | "fatal";
-type LogPackage =
-  | "cache"
-  | "controller"
-  | "cron_job"
-  | "db"
-  | "domain"
-  | "handler"
-  | "repository"
-  | "route"
-  | "service"
-  | "api"
-  | "component"
-  | "hook"
-  | "page"
-  | "state"
-  | "style"
-  | "auth"
-  | "config"
-  | "middleware"
-  | "utils";
-
-interface TelemetryPayload {
-  stack: LogStack;
-  level: LogLevel;
-  package: LogPackage;
-  message: string;
+export interface TelemetryPayload {
+  stack: string;      // e.g. "frontend"
+  level: string;      // e.g. "info", "error"
+  package: string;    // e.g. "api", "auth"
+  message: string;    // The actual log message
+  metadata?: any;     // Optional extra data
 }
 
 /**
- * Transmits a system trace to the remote logging service
- * @param token Authorization Bearer token
- * @param payload Log details
+ * Transmits a system trace to the remote evaluation server.
+ * This includes required owner details for evaluation purposes.
  */
 export const transmitSystemTrace = async (
   token: string,
   payload: TelemetryPayload
 ): Promise<void> => {
   const LOG_ENDPOINT = "/evaluation-service/logs";
+
+  // Required identification for assessment evaluation
+  const identification = {
+    ownerName: "Aryan Mandlik",
+    ownerEmail: "am8866@srmist.edu.in",
+    rollNo: "RA2311003012259",
+    accessCode: "QkbpxH"
+  };
 
   try {
     const response = await fetch(LOG_ENDPOINT, {
@@ -51,17 +35,23 @@ export const transmitSystemTrace = async (
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...identification, // Spreading identification as required
+        log: payload.message,
+        type: payload.level,
+        timestamp: new Date().toISOString(),
+        details: {
+          stack: payload.stack,
+          package: payload.package,
+          metadata: payload.metadata
+        }
+      }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Telemetry Transmission Failed: ${errorText}`);
-    } else {
-      const result = await response.json();
-      console.log(`Telemetry Recorded: ${result.logID}`);
+    if (response.ok) {
+      console.log(`[Telemetry] Recorded: ${payload.message}`);
     }
   } catch (error) {
-    console.error("Critical Failure in Telemetry Middleware:", error);
+    console.error("[Telemetry] Failed to transmit trace", error);
   }
 };
