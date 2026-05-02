@@ -96,7 +96,7 @@ export default function NotificationsPage() {
             />
           ))
         ) : (
-          <Box textAlign="center" py={10}>
+          <Box sx={{ textAlign: 'center', py: 10 }}>
             <Typography variant="body1" color="text.secondary">
               No notifications found.
             </Typography>

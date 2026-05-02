@@ -116,7 +116,7 @@ export default function PriorityInboxPage() {
             />
           ))
         ) : (
-          <Box textAlign="center" py={10}>
+          <Box sx={{ textAlign: 'center', py: 10 }}>
             <Typography variant="body1" color="text.secondary">
               No priority alerts at this time.
             </Typography>
